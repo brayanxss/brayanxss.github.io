@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async function () {
 const status = document.getElementById("status");
 const userInfo = document.getElementById("user-info");
 const navbarUser = document.getElementById("navbar-user");
@@ -7,11 +7,11 @@ const logoutForm = document.getElementById("logout-form");
 
 function escapeHtml(value) {
 return String(value)
-.replaceAll("&", "&")
-.replaceAll("<", "<")
-.replaceAll(">", ">")
-.replaceAll('"', """)
-.replaceAll("'", "'");
+.replace(/&/g, "&")
+.replace(/</g, "<")
+.replace(/>/g, ">")
+.replace(/"/g, """)
+.replace(/'/g, "'");
 }
 
 async function loadSession() {
@@ -28,23 +28,28 @@ cache: "no-store"
   console.log("Resposta /api/me:", user);
 
   if (!response.ok || !user.authenticated) {
-    status.textContent = "Nenhuma sessão neste navegador.";
+    status.textContent =
+      "Nenhuma sessão neste navegador.";
 
     userInfo.innerHTML =
       "<p class='text-muted'>Você não está autenticado.</p>";
 
-    navbarUser.textContent = "Visitante";
+    navbarUser.textContent =
+      "Visitante";
 
-    sessionState.textContent = "Inativa";
+    sessionState.textContent =
+      "Inativa";
 
     if (logoutForm) {
-      logoutForm.style.display = "none";
+      logoutForm.style.display =
+        "none";
     }
 
     return;
   }
 
-  status.textContent = "Sessão autenticada.";
+  status.textContent =
+    "Sessão autenticada.";
 
   navbarUser.textContent =
     user.email ||
@@ -52,49 +57,52 @@ cache: "no-store"
     user.subject ||
     "Usuário";
 
-  sessionState.textContent = "Ativa";
+  sessionState.textContent =
+    "Ativa";
 
-  userInfo.innerHTML = `
-    <p>
-      <strong>Nome:</strong>
-      ${escapeHtml(user.displayName || "Não informado")}
-    </p>
+  userInfo.innerHTML =
+    "<p><strong>Nome:</strong> " +
+    escapeHtml(user.displayName || "Não informado") +
+    "</p>" +
 
-    <p>
-      <strong>E-mail:</strong>
-      ${escapeHtml(user.email || "Não informado")}
-    </p>
+    "<p><strong>E-mail:</strong> " +
+    escapeHtml(user.email || "Não informado") +
+    "</p>" +
 
-    <p>
-      <strong>Provedor:</strong>
-      ${escapeHtml(user.issuer || "Não informado")}
-    </p>
+    "<p><strong>Provedor:</strong> " +
+    escapeHtml(user.issuer || "Não informado") +
+    "</p>" +
 
-    <p>
-      <strong>Identificador:</strong>
-      ${escapeHtml(user.subject || "Não informado")}
-    </p>
-  `;
+    "<p><strong>Identificador:</strong> " +
+    escapeHtml(user.subject || "Não informado") +
+    "</p>";
 
   if (logoutForm) {
-    logoutForm.style.display = "block";
+    logoutForm.style.display =
+      "block";
   }
 
 } catch (error) {
 
-  console.error("Erro ao consultar /api/me:", error);
+  console.error(
+    "Erro ao consultar /api/me:",
+    error
+  );
 
   status.textContent =
     "Não foi possível consultar a sessão.";
 
   userInfo.innerHTML =
-    "<p class='text-danger'>Erro ao consultar /api/me.</p>";
+    "<p class='text-danger'>" +
+    "Erro ao consultar /api/me." +
+    "</p>";
 
   sessionState.textContent =
     "Indisponível";
 
   if (logoutForm) {
-    logoutForm.style.display = "none";
+    logoutForm.style.display =
+      "none";
   }
 }
 ```
@@ -104,47 +112,56 @@ cache: "no-store"
 if (logoutForm) {
 
 ```
-logoutForm.addEventListener("submit", async (event) => {
+logoutForm.addEventListener(
+  "submit",
+  async function (event) {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const button =
-    logoutForm.querySelector("button");
-
-  if (button) {
-    button.disabled = true;
-  }
-
-  try {
-
-    const response = await fetch("/oauth/logout", {
-      method: "POST",
-      credentials: "same-origin",
-      cache: "no-store"
-    });
-
-    if (response.ok) {
-      window.location.href = "/";
-      return;
-    }
-
-    status.textContent =
-      "Não foi possível encerrar a sessão.";
-
-  } catch (error) {
-
-    console.error("Erro no logout:", error);
-
-    status.textContent =
-      "Não foi possível encerrar a sessão.";
-
-  } finally {
+    const button =
+      logoutForm.querySelector("button");
 
     if (button) {
-      button.disabled = false;
+      button.disabled = true;
+    }
+
+    try {
+
+      const response = await fetch(
+        "/oauth/logout",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store"
+        }
+      );
+
+      if (response.ok) {
+        window.location.href = "/";
+        return;
+      }
+
+      status.textContent =
+        "Não foi possível encerrar a sessão.";
+
+    } catch (error) {
+
+      console.error(
+        "Erro no logout:",
+        error
+      );
+
+      status.textContent =
+        "Não foi possível encerrar a sessão.";
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+      }
     }
   }
-});
+);
 ```
 
 }
