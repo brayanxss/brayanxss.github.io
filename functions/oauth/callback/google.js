@@ -349,15 +349,19 @@ export async function onRequestGet(context) {
     .bind(txIdHash)
     .run();
 
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: "/",
-      "Cache-Control": "no-store",
-      "Set-Cookie": [
-        `${SESSION_COOKIE}=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`,
-        clearTransactionCookie(),
-      ].join(", "),
-    },
-  });
-}
+  const headers = new Headers();
+
+headers.set("Location", "/");
+headers.set("Cache-Control", "no-store");
+
+headers.append(
+  "Set-Cookie",
+  `${SESSION_COOKIE}=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`
+);
+
+headers.append("Set-Cookie", clearTransactionCookie());
+
+return new Response(null, {
+  status: 302,
+  headers,
+});
