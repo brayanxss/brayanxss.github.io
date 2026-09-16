@@ -1,10 +1,12 @@
 const SESSION_COOKIE = "__Host-session";
 
 function getCookie(request, name) {
-  const header = request.headers.get("Cookie") || "";
+  const header =
+    request.headers.get("Cookie") || "";
 
   for (const part of header.split(";")) {
-    const [key, ...value] = part.trim().split("=");
+    const [key, ...value] =
+      part.trim().split("=");
 
     if (key === name) {
       return value.join("=");
@@ -15,8 +17,14 @@ function getCookie(request, name) {
 }
 
 async function sha256Base64url(value) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
+  const data =
+    new TextEncoder().encode(value);
+
+  const digest =
+    await crypto.subtle.digest(
+      "SHA-256",
+      data
+    );
 
   let binary = "";
 
@@ -30,14 +38,62 @@ async function sha256Base64url(value) {
     .replace(/=+$/, "");
 }
 
+function clearSessionCookie() {
+  return (
+    SESSION_COOKIE +
+    "=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+  );
+}
+
 export async function onRequestPost(context) {
-  const sessionToken = getCookie(context.request, SESSION_COOKIE);
+  const request = context.request;
+
+  const baseUrl =
+    context.env.PUBLIC_BASE_URL;
+
+  if (!baseUrl) {
+    return new Response(
+      "PUBLIC_BASE_URL nao configurada.",
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  }
+
+  // Logout somente pode ser iniciado
+  // pelo proprio site.
+  const origin =
+    request.headers.get("Origin");
+
+  if (origin !== baseUrl) {
+    return new Response(
+      "Origin invalida.",
+      {
+        status: 403,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
+  }
+
+  const sessionToken =
+    getCookie(
+      request,
+      SESSION_COOKIE
+    );
 
   if (sessionToken) {
-    const idHash = await sha256Base64url(sessionToken);
+    const idHash =
+      await sha256Base64url(
+        sessionToken
+      );
 
     await context.env.DB.prepare(
-      `DELETE FROM sessions WHERE id_hash = ?`
+      "DELETE FROM sessions WHERE id_hash = ?"
     )
       .bind(idHash)
       .run();
@@ -49,7 +105,7 @@ export async function onRequestPost(context) {
       headers: {
         "Cache-Control": "no-store",
         "Set-Cookie":
-          `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`,
+          clearSessionCookie(),
       },
     }
   );
