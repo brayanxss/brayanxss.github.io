@@ -5,6 +5,15 @@ const navbarUser = document.getElementById("navbar-user");
 const sessionState = document.getElementById("session-state");
 const logoutForm = document.getElementById("logout-form");
 
+function escapeHtml(value) {
+return String(value)
+.replaceAll("&", "&")
+.replaceAll("<", "<")
+.replaceAll(">", ">")
+.replaceAll('"', """)
+.replaceAll("'", "'");
+}
+
 async function loadSession() {
 try {
 const response = await fetch("/api/me", {
@@ -27,8 +36,9 @@ cache: "no-store"
     sessionState.textContent =
       "Inativa";
 
-    logoutForm.style.display =
-      "none";
+    if (logoutForm) {
+      logoutForm.style.display = "none";
+    }
 
     return;
   }
@@ -48,11 +58,16 @@ cache: "no-store"
     sessionState.textContent =
       "Inativa";
 
-    logoutForm.style.display =
-      "none";
+    if (logoutForm) {
+      logoutForm.style.display = "none";
+    }
 
     return;
   }
+
+  /*
+   * Sessão autenticada
+   */
 
   status.textContent =
     "Sessão autenticada.";
@@ -88,10 +103,13 @@ cache: "no-store"
     </p>
   `;
 
-  logoutForm.style.display =
-    "block";
+  if (logoutForm) {
+    logoutForm.style.display = "block";
+  }
 
 } catch (error) {
+
+  console.error("Erro ao consultar /api/me:", error);
 
   status.textContent =
     "Não foi possível consultar a sessão.";
@@ -102,60 +120,71 @@ cache: "no-store"
   sessionState.textContent =
     "Indisponível";
 
-  logoutForm.style.display =
-    "none";
+  if (logoutForm) {
+    logoutForm.style.display = "none";
+  }
 }
 ```
 
 }
 
-function escapeHtml(value) {
-return String(value)
-.replaceAll("&", "&")
-.replaceAll("<", "<")
-.replaceAll(">", ">")
-.replaceAll('"', """)
-.replaceAll("'", "'");
-}
+/*
 
+* Logout
+  */
+
+if (logoutForm) {
+
+```
 logoutForm.addEventListener("submit", async (event) => {
 
-```
-event.preventDefault();
+  event.preventDefault();
 
-const button =
-  logoutForm.querySelector("button");
+  const button =
+    logoutForm.querySelector("button");
 
-button.disabled = true;
-
-try {
-
-  const response = await fetch("/oauth/logout", {
-    method: "POST",
-    credentials: "same-origin",
-    cache: "no-store"
-  });
-
-  if (response.ok) {
-    window.location.href = "/";
-    return;
+  if (button) {
+    button.disabled = true;
   }
 
-  status.textContent =
-    "Não foi possível encerrar a sessão.";
+  try {
 
-} catch (error) {
+    const response = await fetch("/oauth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
 
-  status.textContent =
-    "Não foi possível encerrar a sessão.";
+    if (response.ok) {
+      window.location.href = "/";
+      return;
+    }
 
-} finally {
+    status.textContent =
+      "Não foi possível encerrar a sessão.";
 
-  button.disabled = false;
-}
+  } catch (error) {
+
+    console.error("Erro no logout:", error);
+
+    status.textContent =
+      "Não foi possível encerrar a sessão.";
+
+  } finally {
+
+    if (button) {
+      button.disabled = false;
+    }
+  }
+});
 ```
 
-});
+}
+
+/*
+
+* Consulta inicial da sessão
+  */
 
 await loadSession();
 });
