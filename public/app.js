@@ -23,40 +23,19 @@ cache: "no-store"
 });
 
 ```
-  if (!response.ok) {
-    status.textContent =
-      "Nenhuma sessão neste navegador.";
-
-    userInfo.innerHTML =
-      "<p class='text-muted'>Você não está autenticado.</p>";
-
-    navbarUser.textContent =
-      "Visitante";
-
-    sessionState.textContent =
-      "Inativa";
-
-    if (logoutForm) {
-      logoutForm.style.display = "none";
-    }
-
-    return;
-  }
-
   const user = await response.json();
 
-  if (!user.authenticated) {
-    status.textContent =
-      "Nenhuma sessão neste navegador.";
+  console.log("Resposta /api/me:", user);
+
+  if (!response.ok || !user.authenticated) {
+    status.textContent = "Nenhuma sessão neste navegador.";
 
     userInfo.innerHTML =
       "<p class='text-muted'>Você não está autenticado.</p>";
 
-    navbarUser.textContent =
-      "Visitante";
+    navbarUser.textContent = "Visitante";
 
-    sessionState.textContent =
-      "Inativa";
+    sessionState.textContent = "Inativa";
 
     if (logoutForm) {
       logoutForm.style.display = "none";
@@ -65,12 +44,7 @@ cache: "no-store"
     return;
   }
 
-  /*
-   * Sessão autenticada
-   */
-
-  status.textContent =
-    "Sessão autenticada.";
+  status.textContent = "Sessão autenticada.";
 
   navbarUser.textContent =
     user.email ||
@@ -78,8 +52,7 @@ cache: "no-store"
     user.subject ||
     "Usuário";
 
-  sessionState.textContent =
-    "Ativa";
+  sessionState.textContent = "Ativa";
 
   userInfo.innerHTML = `
     <p>
@@ -128,11 +101,6 @@ cache: "no-store"
 
 }
 
-/*
-
-* Logout
-  */
-
 if (logoutForm) {
 
 ```
@@ -180,11 +148,6 @@ logoutForm.addEventListener("submit", async (event) => {
 ```
 
 }
-
-/*
-
-* Consulta inicial da sessão
-  */
 
 await loadSession();
 });
