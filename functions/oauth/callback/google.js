@@ -384,7 +384,7 @@ export async function onRequestGet(context) {
     SESSION_COOKIE +
       "=" +
       sessionToken +
-      "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800"
+      "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800"
   );
 
   headers.append(
