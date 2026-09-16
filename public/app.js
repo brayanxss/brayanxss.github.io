@@ -16,6 +16,7 @@ return response.json();
 .then(function (user) {
 console.log("Resposta /api/me:", user);
 
+
   if (user.authenticated !== true) {
     status.textContent = "Nenhuma sessao neste navegador.";
     userInfo.textContent = "Voce nao esta autenticado.";
@@ -61,7 +62,7 @@ console.log("Resposta /api/me:", user);
 
   status.textContent = "Erro ao consultar a sessao.";
   sessionState.textContent = "Indisponivel";
-  userInfo.textContent = "Nao foi possivel consultar /api/me.";
+  userInfo.textContent = "Nao foi possivel consultar a sessao.";
   navbarUser.textContent = "Visitante";
 
   if (logoutForm) {
@@ -69,9 +70,11 @@ console.log("Resposta /api/me:", user);
   }
 });
 
+
 if (logoutForm) {
 logoutForm.addEventListener("submit", function (event) {
 event.preventDefault();
+
 
   var button = logoutForm.querySelector("button");
 
@@ -105,4 +108,7 @@ event.preventDefault();
         button.disabled = false;
       }
     });
+});
+
+}
 });
