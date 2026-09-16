@@ -1,3 +1,4 @@
+```js
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 
@@ -5,8 +6,9 @@ const TX_COOKIE = "__Host-oauth-tx";
 const SESSION_COOKIE = "__Host-session";
 
 function base64urlToBytes(value) {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/")
-    + "===".slice((value.length + 3) % 4);
+  const padded =
+    value.replace(/-/g, "+").replace(/_/g, "/") +
+    "===".slice((value.length + 3) % 4);
 
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
@@ -42,6 +44,7 @@ async function sha256Base64url(value) {
   const digest = await crypto.subtle.digest("SHA-256", data);
 
   let binary = "";
+
   for (const byte of new Uint8Array(digest)) {
     binary += String.fromCharCode(byte);
   }
@@ -324,7 +327,6 @@ export async function onRequestGet(context) {
 
   const sessionToken = base64url(randomBytes(32));
   const sessionIdHash = await sha256Base64url(sessionToken);
-
   const sessionExpiresAt = now + 8 * 60 * 60;
 
   await context.env.DB.prepare(
@@ -351,18 +353,19 @@ export async function onRequestGet(context) {
 
   const headers = new Headers();
 
-headers.set("Location", "/");
-headers.set("Cache-Control", "no-store");
+  headers.set("Location", "/");
+  headers.set("Cache-Control", "no-store");
 
-headers.append(
-  "Set-Cookie",
-  `${SESSION_COOKIE}=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`
-);
+  headers.append(
+    "Set-Cookie",
+    `${SESSION_COOKIE}=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`
+  );
 
-headers.append("Set-Cookie", clearTransactionCookie());
+  headers.append("Set-Cookie", clearTransactionCookie());
 
-return new Response(null, {
-  status: 302,
-  headers,
-});
+  return new Response(null, {
+    status: 302,
+    headers,
+  });
 }
+```
