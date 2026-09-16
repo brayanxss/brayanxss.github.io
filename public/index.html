@@ -19,9 +19,7 @@
       <a href="/oauth/login/github">Entrar com GitHub</a>
     </p>
 
-    <form method="post" action="/oauth/logout">
-      <button type="submit">Sair</button>
-    </form>
+    <button id="logout" type="button">Sair</button>
   </main>
 
   <script>
@@ -42,14 +40,30 @@
           status.textContent =
             `Sessão ativa: ${user.email ?? user.displayName ?? user.subject}`;
         } else {
-          status.textContent = "Nenhuma sessão neste navegador.";
+          status.textContent =
+            "Nenhuma sessão neste navegador.";
         }
       })
       .catch(() => {
         document.getElementById("status").textContent =
           "Não foi possível consultar a sessão.";
       });
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/oauth/logout", {
+          method: "POST",
+          credentials: "same-origin"
+        });
+
+        if (response.ok) {
+          window.location.href = "/";
+        }
+      } catch {
+        document.getElementById("status").textContent =
+          "Não foi possível sair.";
+      }
+    });
   </script>
 </body>
 </html>
-```
