@@ -368,4 +368,3 @@ export async function onRequestGet(context) {
     headers,
   });
 }
-```
