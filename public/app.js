@@ -1,4 +1,3 @@
-```javascript
 document.addEventListener("DOMContentLoaded", async () => {
   const status = document.getElementById("status");
   const userInfo = document.getElementById("user-info");
@@ -149,4 +148,3 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadSession();
 });
-```
