@@ -28,14 +28,16 @@ function parseJwt(token) {
   const parts = token.split(".");
 
   if (parts.length !== 3) {
-    throw new Error("ID token inválido.");
+    throw new Error("ID token invalido.");
   }
 
   return {
     header: JSON.parse(base64urlToString(parts[0])),
     payload: JSON.parse(base64urlToString(parts[1])),
     signature: base64urlToBytes(parts[2]),
-    signingInput: new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+    signingInput: new TextEncoder().encode(
+      parts[0] + "." + parts[1]
+    ),
   };
 }
 
@@ -55,7 +57,7 @@ async function sha256Base64url(value) {
     .replace(/=+$/, "");
 }
 
-function randomBytes(length = 32) {
+function randomBytes(length) {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   return bytes;
@@ -78,10 +80,11 @@ function getCookie(request, name) {
   const header = request.headers.get("Cookie") || "";
 
   for (const part of header.split(";")) {
-    const [key, ...value] = part.trim().split("=");
+    const pieces = part.trim().split("=");
+    const key = pieces.shift();
 
     if (key === name) {
-      return value.join("=");
+      return pieces.join("=");
     }
   }
 
@@ -92,7 +95,7 @@ async function verifyGoogleIdToken(idToken, clientId, expectedNonce) {
   const jwt = parseJwt(idToken);
 
   if (jwt.header.alg !== "RS256") {
-    throw new Error("Algoritmo do ID token inválido.");
+    throw new Error("Algoritmo do ID token invalido.");
   }
 
   if (!jwt.header.kid) {
@@ -102,17 +105,17 @@ async function verifyGoogleIdToken(idToken, clientId, expectedNonce) {
   const jwksResponse = await fetch(GOOGLE_JWKS_URL);
 
   if (!jwksResponse.ok) {
-    throw new Error("Não foi possível obter as chaves do Google.");
+    throw new Error("Nao foi possivel obter as chaves do Google.");
   }
 
   const jwks = await jwksResponse.json();
 
-  const jwk = jwks.keys.find(
-    (key) => key.kid === jwt.header.kid && key.kty === "RSA"
-  );
+  const jwk = jwks.keys.find(function (key) {
+    return key.kid === jwt.header.kid && key.kty === "RSA";
+  });
 
   if (!jwk) {
-    throw new Error("Chave pública do Google não encontrada.");
+    throw new Error("Chave publica do Google nao encontrada.");
   }
 
   const publicKey = await crypto.subtle.importKey(
@@ -134,7 +137,7 @@ async function verifyGoogleIdToken(idToken, clientId, expectedNonce) {
   );
 
   if (!validSignature) {
-    throw new Error("Assinatura do ID token inválida.");
+    throw new Error("Assinatura do ID token invalida.");
   }
 
   const claims = jwt.payload;
@@ -143,11 +146,11 @@ async function verifyGoogleIdToken(idToken, clientId, expectedNonce) {
     claims.iss !== "https://accounts.google.com" &&
     claims.iss !== "accounts.google.com"
   ) {
-    throw new Error("Issuer inválido.");
+    throw new Error("Issuer invalido.");
   }
 
   if (claims.aud !== clientId) {
-    throw new Error("Audience inválida.");
+    throw new Error("Audience invalida.");
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -161,14 +164,17 @@ async function verifyGoogleIdToken(idToken, clientId, expectedNonce) {
   }
 
   if (claims.nonce !== expectedNonce) {
-    throw new Error("Nonce inválido.");
+    throw new Error("Nonce invalido.");
   }
 
   return claims;
 }
 
 function clearTransactionCookie() {
-  return `${TX_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+  return (
+    TX_COOKIE +
+    "=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
+  );
 }
 
 export async function onRequestGet(context) {
@@ -178,13 +184,16 @@ export async function onRequestGet(context) {
   const error = url.searchParams.get("error");
 
   if (error) {
-    return new Response(`Login Google cancelado: ${error}`, {
-      status: 400,
-      headers: {
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearTransactionCookie(),
-      },
-    });
+    return new Response(
+      "Login Google cancelado: " + error,
+      {
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store",
+          "Set-Cookie": clearTransactionCookie(),
+        },
+      }
+    );
   }
 
   const code = url.searchParams.get("code");
@@ -202,7 +211,7 @@ export async function onRequestGet(context) {
   const txIdHash = getCookie(request, TX_COOKIE);
 
   if (!txIdHash) {
-    return new Response("Transação OAuth ausente.", {
+    return new Response("Transacao OAuth ausente.", {
       status: 400,
       headers: {
         "Cache-Control": "no-store",
@@ -211,21 +220,23 @@ export async function onRequestGet(context) {
   }
 
   const transaction = await context.env.DB.prepare(
-    `SELECT id_hash, provider, state_hash, nonce, code_verifier, expires_at
-     FROM oauth_transactions
-     WHERE id_hash = ?`
+    "SELECT id_hash, provider, state_hash, nonce, code_verifier, expires_at " +
+    "FROM oauth_transactions WHERE id_hash = ?"
   )
     .bind(txIdHash)
     .first();
 
   if (!transaction) {
-    return new Response("Transação OAuth inválida ou inexistente.", {
-      status: 400,
-      headers: {
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearTransactionCookie(),
-      },
-    });
+    return new Response(
+      "Transacao OAuth invalida ou inexistente.",
+      {
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store",
+          "Set-Cookie": clearTransactionCookie(),
+        },
+      }
+    );
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -234,7 +245,7 @@ export async function onRequestGet(context) {
     transaction.provider !== "google" ||
     transaction.expires_at <= now
   ) {
-    return new Response("Transação OAuth expirada.", {
+    return new Response("Transacao OAuth expirada.", {
       status: 400,
       headers: {
         "Cache-Control": "no-store",
@@ -246,7 +257,7 @@ export async function onRequestGet(context) {
   const receivedStateHash = await sha256Base64url(state);
 
   if (receivedStateHash !== transaction.state_hash) {
-    return new Response("State inválido.", {
+    return new Response("State invalido.", {
       status: 400,
       headers: {
         "Cache-Control": "no-store",
@@ -259,12 +270,15 @@ export async function onRequestGet(context) {
   const clientSecret = context.env.GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    return new Response("Credenciais Google não configuradas.", {
-      status: 500,
-      headers: {
-        "Cache-Control": "no-store",
-      },
-    });
+    return new Response(
+      "Credenciais Google nao configuradas.",
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   }
 
   const redirectUri =
@@ -278,7 +292,7 @@ export async function onRequestGet(context) {
     body: new URLSearchParams({
       client_id: clientId,
       client_secret: clientSecret,
-      code,
+      code: code,
       code_verifier: transaction.code_verifier,
       grant_type: "authorization_code",
       redirect_uri: redirectUri,
@@ -286,25 +300,31 @@ export async function onRequestGet(context) {
   });
 
   if (!tokenResponse.ok) {
-    return new Response("Falha ao trocar o código OAuth.", {
-      status: 400,
-      headers: {
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearTransactionCookie(),
-      },
-    });
+    return new Response(
+      "Falha ao trocar o codigo OAuth.",
+      {
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store",
+          "Set-Cookie": clearTransactionCookie(),
+        },
+      }
+    );
   }
 
   const tokens = await tokenResponse.json();
 
   if (!tokens.id_token) {
-    return new Response("Google não retornou um ID token.", {
-      status: 400,
-      headers: {
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearTransactionCookie(),
-      },
-    });
+    return new Response(
+      "Google nao retornou um ID token.",
+      {
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store",
+          "Set-Cookie": clearTransactionCookie(),
+        },
+      }
+    );
   }
 
   let claims;
@@ -316,13 +336,16 @@ export async function onRequestGet(context) {
       transaction.nonce
     );
   } catch (err) {
-    return new Response(`ID token rejeitado: ${err.message}`, {
-      status: 400,
-      headers: {
-        "Cache-Control": "no-store",
-        "Set-Cookie": clearTransactionCookie(),
-      },
-    });
+    return new Response(
+      "ID token rejeitado: " + err.message,
+      {
+        status: 400,
+        headers: {
+          "Cache-Control": "no-store",
+          "Set-Cookie": clearTransactionCookie(),
+        },
+      }
+    );
   }
 
   const sessionToken = base64url(randomBytes(32));
@@ -330,9 +353,9 @@ export async function onRequestGet(context) {
   const sessionExpiresAt = now + 8 * 60 * 60;
 
   await context.env.DB.prepare(
-    `INSERT INTO sessions
-      (id_hash, issuer, subject, email, display_name, expires_at, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
+    "INSERT INTO sessions " +
+    "(id_hash, issuer, subject, email, display_name, expires_at, created_at) " +
+    "VALUES (?, ?, ?, ?, ?, ?, ?)"
   )
     .bind(
       sessionIdHash,
@@ -346,7 +369,7 @@ export async function onRequestGet(context) {
     .run();
 
   await context.env.DB.prepare(
-    `DELETE FROM oauth_transactions WHERE id_hash = ?`
+    "DELETE FROM oauth_transactions WHERE id_hash = ?"
   )
     .bind(txIdHash)
     .run();
@@ -358,13 +381,20 @@ export async function onRequestGet(context) {
 
   headers.append(
     "Set-Cookie",
-    `${SESSION_COOKIE}=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`
+    SESSION_COOKIE +
+      "=" +
+      sessionToken +
+      "; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800"
   );
 
-  headers.append("Set-Cookie", clearTransactionCookie());
+  headers.append(
+    "Set-Cookie",
+    clearTransactionCookie()
+  );
 
   return new Response(null, {
     status: 302,
-    headers,
+    headers: headers,
   });
 }
+```
