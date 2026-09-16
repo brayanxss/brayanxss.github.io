@@ -374,22 +374,17 @@ export async function onRequestGet(context) {
     .bind(txIdHash)
     .run();
 
-  const headers = new Headers();
+  const cookie =
+  SESSION_COOKIE +
+  "=" +
+  sessionToken +
+  "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800";
 
-  headers.set("Location", "/");
-  headers.set("Cache-Control", "no-store");
-
-  headers.append(
-    "Set-Cookie",
-    SESSION_COOKIE +
-      "=" +
-      sessionToken +
-      "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800"
-  );
-
-  return new Response(null, {
-    status: 302,
-    headers: headers,
-  });
-}
-```
+return new Response(null, {
+  status: 302,
+  headers: {
+    "Location": "https://brayanxss-github-io.pages.dev/",
+    "Cache-Control": "no-store",
+    "Set-Cookie": cookie
+  }
+});
