@@ -387,11 +387,6 @@ export async function onRequestGet(context) {
       "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800"
   );
 
-  headers.append(
-    "Set-Cookie",
-    clearTransactionCookie()
-  );
-
   return new Response(null, {
     status: 302,
     headers: headers,
