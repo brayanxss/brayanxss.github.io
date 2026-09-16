@@ -1,38 +1,34 @@
 document.addEventListener("DOMContentLoaded", async function () {
+
 const status = document.getElementById("status");
 const userInfo = document.getElementById("user-info");
 const navbarUser = document.getElementById("navbar-user");
 const sessionState = document.getElementById("session-state");
 const logoutForm = document.getElementById("logout-form");
 
-function escapeHtml(value) {
-return String(value)
-.replace(/&/g, "&")
-.replace(/</g, "<")
-.replace(/>/g, ">")
-.replace(/"/g, """)
-.replace(/'/g, "'");
-}
-
 async function loadSession() {
-try {
-const response = await fetch("/api/me", {
-method: "GET",
-credentials: "same-origin",
-cache: "no-store"
-});
 
 ```
+try {
+
+  const response = await fetch("/api/me", {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store"
+  });
+
   const user = await response.json();
 
   console.log("Resposta /api/me:", user);
 
+
   if (!response.ok || !user.authenticated) {
+
     status.textContent =
       "Nenhuma sessão neste navegador.";
 
-    userInfo.innerHTML =
-      "<p class='text-muted'>Você não está autenticado.</p>";
+    userInfo.textContent =
+      "Você não está autenticado.";
 
     navbarUser.textContent =
       "Visitante";
@@ -41,15 +37,16 @@ cache: "no-store"
       "Inativa";
 
     if (logoutForm) {
-      logoutForm.style.display =
-        "none";
+      logoutForm.style.display = "none";
     }
 
     return;
   }
 
+
   status.textContent =
     "Sessão autenticada.";
+
 
   navbarUser.textContent =
     user.email ||
@@ -57,52 +54,48 @@ cache: "no-store"
     user.subject ||
     "Usuário";
 
+
   sessionState.textContent =
     "Ativa";
 
+
   userInfo.innerHTML =
     "<p><strong>Nome:</strong> " +
-    escapeHtml(user.displayName || "Não informado") +
+    (user.displayName || "Não informado") +
     "</p>" +
 
     "<p><strong>E-mail:</strong> " +
-    escapeHtml(user.email || "Não informado") +
+    (user.email || "Não informado") +
     "</p>" +
 
     "<p><strong>Provedor:</strong> " +
-    escapeHtml(user.issuer || "Não informado") +
+    (user.issuer || "Não informado") +
     "</p>" +
 
     "<p><strong>Identificador:</strong> " +
-    escapeHtml(user.subject || "Não informado") +
+    (user.subject || "Não informado") +
     "</p>";
 
+
   if (logoutForm) {
-    logoutForm.style.display =
-      "block";
+    logoutForm.style.display = "block";
   }
 
 } catch (error) {
 
-  console.error(
-    "Erro ao consultar /api/me:",
-    error
-  );
+  console.error("Erro ao consultar /api/me:", error);
 
   status.textContent =
     "Não foi possível consultar a sessão.";
 
-  userInfo.innerHTML =
-    "<p class='text-danger'>" +
-    "Erro ao consultar /api/me." +
-    "</p>";
+  userInfo.textContent =
+    "Erro ao consultar /api/me.";
 
   sessionState.textContent =
     "Indisponível";
 
   if (logoutForm) {
-    logoutForm.style.display =
-      "none";
+    logoutForm.style.display = "none";
   }
 }
 ```
@@ -118,12 +111,15 @@ logoutForm.addEventListener(
 
     event.preventDefault();
 
+
     const button =
       logoutForm.querySelector("button");
+
 
     if (button) {
       button.disabled = true;
     }
+
 
     try {
 
@@ -136,10 +132,14 @@ logoutForm.addEventListener(
         }
       );
 
+
       if (response.ok) {
+
         window.location.href = "/";
         return;
+
       }
+
 
       status.textContent =
         "Não foi possível encerrar a sessão.";
@@ -159,6 +159,7 @@ logoutForm.addEventListener(
       if (button) {
         button.disabled = false;
       }
+
     }
   }
 );
@@ -167,4 +168,5 @@ logoutForm.addEventListener(
 }
 
 await loadSession();
+
 });
