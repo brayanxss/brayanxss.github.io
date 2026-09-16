@@ -1,0 +1,42 @@
+```css
+#logout {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+#logout:hover {
+  text-decoration: none;
+}
+
+#status {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+#user-info {
+  line-height: 1.8;
+}
+
+.card .btn {
+  margin-bottom: 10px;
+}
+
+.card .btn:last-child {
+  margin-bottom: 0;
+}
+
+.footer {
+  padding-top: 20px;
+}
+
+@media (max-width: 991px) {
+  .sidebar {
+    z-index: 1032;
+  }
+
+  .main-panel {
+    width: 100%;
+  }
+}
+```
