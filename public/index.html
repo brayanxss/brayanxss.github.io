@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -8,7 +9,8 @@
 <body>
   <main>
     <h1>Laboratório de autenticação</h1>
-    <p id="status">A sessão ainda não foi consultada.</p>
+
+    <p id="status">Consultando sessão...</p>
 
     <p>
       <a href="/oauth/login/google">Entrar com Google</a>
@@ -22,5 +24,33 @@
       <button type="submit">Sair</button>
     </form>
   </main>
+
+  <script>
+    fetch("/api/me", {
+      credentials: "same-origin"
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return null;
+        }
+
+        return response.json();
+      })
+      .then((user) => {
+        const status = document.getElementById("status");
+
+        if (user && user.authenticated) {
+          status.textContent =
+            `Sessão ativa: ${user.email ?? user.displayName ?? user.subject}`;
+        } else {
+          status.textContent = "Nenhuma sessão neste navegador.";
+        }
+      })
+      .catch(() => {
+        document.getElementById("status").textContent =
+          "Não foi possível consultar a sessão.";
+      });
+  </script>
 </body>
 </html>
+```
