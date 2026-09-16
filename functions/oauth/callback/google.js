@@ -1,4 +1,3 @@
-```js
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs";
 
@@ -375,16 +374,17 @@ export async function onRequestGet(context) {
     .run();
 
   const cookie =
-  SESSION_COOKIE +
-  "=" +
-  sessionToken +
-  "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800";
+    SESSION_COOKIE +
+    "=" +
+    sessionToken +
+    "; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=28800";
 
-return new Response(null, {
-  status: 302,
-  headers: {
-    "Location": "https://brayanxss-github-io.pages.dev/",
-    "Cache-Control": "no-store",
-    "Set-Cookie": cookie
-  }
-});
+  return new Response(null, {
+    status: 302,
+    headers: {
+      "Location": "https://brayanxss-github-io.pages.dev/",
+      "Cache-Control": "no-store",
+      "Set-Cookie": cookie,
+    },
+  });
+}
