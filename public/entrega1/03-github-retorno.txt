@@ -1,5 +1,0 @@
-Homepage:
-https://brayanxss-github-io.pages.dev
-
-Callback:
-https://brayanxss-github-io.pages.dev/oauth/callback/github
