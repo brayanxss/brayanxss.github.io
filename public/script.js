@@ -21,6 +21,7 @@ function setLoginState(authenticated, email) {
   const loginState = document.getElementById("login-state");
   const navbarUser = document.getElementById("navbar-user");
   const loginStatus = document.getElementById("login-status");
+  const googleButton = document.getElementById("google-signin-button");
 
   if (authenticated) {
     loginState.textContent = "Ativo";
