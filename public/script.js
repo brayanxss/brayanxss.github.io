@@ -28,6 +28,10 @@ function setLoginState(authenticated, email) {
     navbarUser.textContent = email || "Google";
     loginStatus.textContent =
       "Google autenticado. A assinatura será feita com o e-mail verificado da conta.";
+
+    if (googleButton) {
+      googleButton.remove();
+    }
   } else {
     loginState.textContent = "Inativo";
     navbarUser.textContent = "Não autenticado";
