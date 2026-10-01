@@ -1,0 +1,46 @@
+#logout {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+#status {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.svg-container {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.svg-container svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  display: block;
+}
+
+#login-status {
+  min-height: 24px;
+}
+
+#download-svg {
+  white-space: normal;
+}
+
+@media (max-width: 991px) {
+  .sidebar {
+    z-index: 1032;
+  }
+
+  .main-panel {
+    width: 100%;
+  }
+}

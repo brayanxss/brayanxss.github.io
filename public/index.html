@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desenho Assinado - Dashboard</title>
+
+  <link rel="icon" type="image/png" href="assets/img/favicon.ico">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+  <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/light-bootstrap-dashboard.css?v=2.0.0" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+<div class="wrapper">
+  <div class="sidebar" data-color="blue" data-image="assets/img/sidebar-5.jpg">
+    <div class="sidebar-wrapper">
+      <div class="logo">
+        <a href="/" class="simple-text">Desenho Assinado</a>
+      </div>
+      <ul class="nav">
+        <li class="nav-item active">
+          <a class="nav-link" href="#desenho">
+            <i class="nc-icon nc-chart-pie-35"></i>
+            <p>Desenho</p>
+          </a>
+        </li>
+        <li>
+          <a class="nav-link" href="#autenticacao">
+            <i class="nc-icon nc-key-25"></i>
+            <p>Google</p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="main-panel">
+    <nav class="navbar navbar-expand-lg" color-on-scroll="500">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Desenho Assinado</a>
+        <div class="ml-auto">
+          <span class="nav-link d-inline-block" id="navbar-user">Não autenticado</span>
+        </div>
+      </div>
+    </nav>
+
+    <div class="content">
+      <div class="container-fluid">
+        <div class="row" id="autenticacao">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">Autenticação</h4>
+                <p class="card-category">A assinatura é obtida do e-mail verificado da conta Google</p>
+              </div>
+              <div class="card-body">
+                <p class="mb-3" id="login-status">Faça login com sua conta Google para gerar o desenho.</p>
+
+                <!--
+                  TROQUE somente o valor abaixo pelo Client ID do seu OAuth Web
+                  no Google Cloud. Client IDs são públicos e podem ficar no site.
+                -->
+                <div
+                  id="g_id_onload"
+                  data-client_id="SEU_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+                  data-callback="handleCredentialResponse"
+                  data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="desenho">
+          <div class="col-md-5">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">Gerar desenho</h4>
+                <p class="card-category">Escolha um número de 1 a 100</p>
+              </div>
+              <div class="card-body">
+                <form id="desenho-form">
+                  <div class="form-group">
+                    <label for="numero">Número</label>
+                    <input
+                      id="numero"
+                      name="numero"
+                      type="number"
+                      min="1"
+                      max="100"
+                      step="1"
+                      class="form-control"
+                      required>
+                  </div>
+
+                  <button id="gerar" type="submit" class="btn btn-primary btn-block">
+                    <i class="fa fa-paint-brush"></i>
+                    Gerar desenho
+                  </button>
+                </form>
+
+                <div id="error-message" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                <div id="success-message" class="alert alert-success mt-3 d-none" role="alert"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-7">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">Resultado</h4>
+                <p class="card-category">SVG gerado pelo servidor</p>
+              </div>
+              <div class="card-body">
+                <div id="svg-container" class="svg-container text-center">
+                  <p class="text-muted mb-0">Nenhum desenho gerado ainda.</p>
+                </div>
+
+                <a id="download-svg"
+                   class="btn btn-outline-secondary btn-block mt-3 d-none"
+                   href="#"
+                   download="desenho.svg">
+                  <i class="fa fa-download"></i>
+                  Baixar SVG
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-5">
+                    <div class="icon-big text-center icon-warning">
+                      <i class="nc-icon nc-lock-circle-open"></i>
+                    </div>
+                  </div>
+                  <div class="col-7">
+                    <div class="numbers">
+                      <p class="card-category">Login</p>
+                      <p id="login-state">Inativo</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-5">
+                    <div class="icon-big text-center icon-info">
+                      <i class="nc-icon nc-cloud-download-93"></i>
+                    </div>
+                  </div>
+                  <div class="col-7">
+                    <div class="numbers">
+                      <p class="card-category">Servidor</p>
+                      <p>Pages Function</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="card card-stats">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-5">
+                    <div class="icon-big text-center icon-success">
+                      <i class="nc-icon nc-check-2"></i>
+                    </div>
+                  </div>
+                  <div class="col-7">
+                    <div class="numbers">
+                      <p class="card-category">API</p>
+                      <p>POST /api/desenho</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="container-fluid">
+            <nav>
+              <p class="copyright text-center">Desenho Assinado - Desenvolvimento Web Prático</p>
+            </nav>
+          </div>
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/core/jquery.3.2.1.min.js"></script>
+<script src="assets/js/core/popper.min.js"></script>
+<script src="assets/js/core/bootstrap.min.js"></script>
+<script src="assets/js/plugins/bootstrap-notify.js"></script>
+<script src="assets/js/light-bootstrap-dashboard.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
