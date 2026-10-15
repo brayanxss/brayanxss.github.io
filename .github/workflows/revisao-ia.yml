@@ -26,4 +26,3 @@ jobs:
             Seja crítico e objetivo. Se encontrar problemas, explique o risco
             e sugira uma correção. Não invente problemas sem evidências.
           model: openai/gpt-4o
-```
