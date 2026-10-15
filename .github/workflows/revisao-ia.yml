@@ -1,4 +1,4 @@
-yaml
+
 name: revisao-ia
 
 on:
@@ -8,21 +8,47 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write
-  models: read
 
 jobs:
   revisar:
     runs-on: ubuntu-latest
     steps:
-      - name: Revisar alterações do Pull Request com IA
-        uses: actions/ai-inference@v2
+      - name: Baixar código
+        uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+
+      - name: Instalar Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Preparar diff do PR
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: git diff "$BASE" "$HEAD" > diff-pr.txt
+
+      - name: Revisar alterações do Pull Request com IA
+        id: ia
+        uses: actions/ai-inference@v3
+        with:
+          model: claude-sonnet-4
           prompt: |
-            Revise as alterações deste Pull Request como um revisor de segurança.
-            Procure SQL injection, segredos expostos, falhas de autenticação,
-            validação insuficiente de entradas e problemas de segurança.
-            Seja crítico e objetivo. Se encontrar problemas, explique o risco
-            e sugira uma correção. Não invente problemas sem evidências.
-          model: openai/gpt-4o
+            Revise o diff deste Pull Request como revisor de segurança.
+            Procure SQL injection, segredos expostos, falhas de autenticação
+            e validação insuficiente. Explique os riscos e sugira correções.
+            Não invente problemas sem evidências.
+          file_input: |
+            diff: diff-pr.txt
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+
+      - name: Comentar revisão no PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW: ${{ steps.ia.outputs.response }}
+        run: gh pr comment "$PR_NUMBER" --body "$REVIEW"
