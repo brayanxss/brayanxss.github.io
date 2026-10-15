@@ -1,4 +1,4 @@
-yaml
+
 name: revisao-ia
 
 on:
@@ -9,20 +9,50 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
-  models: read
 
 jobs:
   revisar:
     runs-on: ubuntu-latest
     steps:
-      - name: Revisar alterações do Pull Request com IA
-        uses: actions/ai-inference@v2
+      - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            Revise as alterações deste Pull Request como um revisor de segurança.
-            Procure SQL injection, segredos expostos, falhas de autenticação,
-            validação insuficiente de entradas e problemas de segurança.
-            Seja crítico e objetivo. Se encontrar problemas, explique o risco
-            e sugira uma correção. Não invente problemas sem evidências.
-          model: openai/gpt-4o
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Instalar Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Montar prompt
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          {
+            echo "Revise o diff deste site com Cloudflare Pages Functions e D1."
+            echo "Procure segredos expostos, SQL injection e erros de lógica."
+            echo "Sugira correções e não invente problemas."
+            echo '```diff'
+            git diff "origin/$BASE_REF...HEAD" | head -c 20000 || true
+            echo
+            echo '```'
+          } > prompt.txt
+
+      - name: Revisar com IA
+        id: ia
+        uses: actions/ai-inference@v3
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        with:
+          prompt-file: prompt.txt
+          system-prompt: Você é um revisor de código objetivo.
+          model: auto
+
+      - name: Comentar no PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RESPONSE_FILE: ${{ steps.ia.outputs.response-file }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body-file "$RESPONSE_FILE"
