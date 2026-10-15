@@ -25,4 +25,5 @@ jobs:
             validação insuficiente de entradas e problemas de segurança.
             Seja crítico e objetivo. Se encontrar problemas, explique o risco
             e sugira uma correção. Não invente problemas sem evidências.
-          model: openai/gpt-4o
+          model: gpt-4.1
+          
