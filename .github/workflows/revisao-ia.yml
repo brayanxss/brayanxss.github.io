@@ -1,4 +1,4 @@
-yaml
+
 name: revisao-ia
 
 on:
@@ -14,15 +14,45 @@ permissions:
 jobs:
   revisar:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Baixar código
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Preparar alterações
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git diff "origin/${BASE_REF}...HEAD" > diff.txt
+
+          {
+            echo "Revise as alterações deste Pull Request como revisor de segurança."
+            echo "Procure SQL injection, segredos expostos, falhas de autenticação e validação insuficiente."
+            echo "Explique os riscos e sugira correções. Não invente problemas sem evidências."
+            echo
+            echo "DIFF:"
+            head -c 20000 diff.txt
+          } > prompt.txt
+
       - name: Revisar alterações do Pull Request com IA
+        id: ia
         uses: actions/ai-inference@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            Revise as alterações deste Pull Request como um revisor de segurança.
-            Procure SQL injection, segredos expostos, falhas de autenticação,
-            validação insuficiente de entradas e problemas de segurança.
-            Seja crítico e objetivo. Se encontrar problemas, explique o risco
-            e sugira uma correção. Não invente problemas sem evidências.
+          prompt-file: prompt.txt
           model: openai/gpt-4o
+
+      - name: Comentar no Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RESPOSTA: ${{ steps.ia.outputs.response }}
+        run: |
+          if [ -z "$RESPOSTA" ]; then
+            echo "::error::A IA retornou uma resposta vazia."
+            exit 1
+          fi
+
+          gh pr comment "$PR_NUMBER" --body "$RESPOSTA"
