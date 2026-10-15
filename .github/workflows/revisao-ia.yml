@@ -1,4 +1,3 @@
-yaml
 name: revisao-ia
 
 on:
@@ -16,9 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Revisar alterações do Pull Request com IA
-        uses: actions/ai-inference@v2
+        uses: actions/ai-inference@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             Revise as alterações deste Pull Request como um revisor de segurança.
             Procure SQL injection, segredos expostos, falhas de autenticação,
@@ -26,4 +24,3 @@ jobs:
             Seja crítico e objetivo. Se encontrar problemas, explique o risco
             e sugira uma correção. Não invente problemas sem evidências.
           model: openai/gpt-4o
-```
