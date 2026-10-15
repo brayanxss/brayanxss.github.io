@@ -1,4 +1,4 @@
-yaml
+
 name: revisao-ia
 
 on:
@@ -8,21 +8,54 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write
-  models: read
 
 jobs:
   revisar:
     runs-on: ubuntu-latest
     steps:
-      - name: Revisar alterações do Pull Request com IA
-        uses: actions/ai-inference@v2
+      - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: |
-            Revise as alterações deste Pull Request como um revisor de segurança.
-            Procure SQL injection, segredos expostos, falhas de autenticação,
-            validação insuficiente de entradas e problemas de segurança.
-            Seja crítico e objetivo. Se encontrar problemas, explique o risco
-            e sugira uma correção. Não invente problemas sem evidências.
-          model: openai/gpt-4o
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Instala Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Monta o prompt
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          {
+            echo "Revise as alterações deste Pull Request como um revisor de segurança."
+            echo "Procure SQL injection, segredos expostos, falhas de autenticação e validação insuficiente."
+            echo "Explique o risco e sugira correções. Não invente problemas sem evidências."
+            echo
+            echo "DIFF:"
+            git diff "origin/${BASE_REF}...HEAD" | head -c 20000
+          } > prompt.txt
+
+      - name: Revisão por IA
+        id: ia
+        uses: actions/ai-inference@v1
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        with:
+          prompt-file: prompt.txt
+          model: gpt-4.1
+          system-prompt: Você é um revisor de código seguro, crítico e objetivo.
+
+      - name: Comenta no PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RESPONSE_FILE: ${{ steps.ia.outputs.response-file }}
+        run: |
+          if [ -z "$RESPONSE_FILE" ] || [ ! -f "$RESPONSE_FILE" ]; then
+            echo "::error::A IA não gerou o arquivo de resposta."
+            exit 1
+          fi
+
+          gh pr comment "$PR_NUMBER" --body-file "$RESPONSE_FILE"
