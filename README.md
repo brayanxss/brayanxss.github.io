@@ -9,3 +9,4 @@ A figura é a tabuada modular no círculo: 240 pontos igualmente espaçados numa
 Nome: brayan troguer dos santos  
 RA: 2026109342  
 URL: https://brayanxss-github-io.pages.dev   
+Teste de proteção da branch main.
